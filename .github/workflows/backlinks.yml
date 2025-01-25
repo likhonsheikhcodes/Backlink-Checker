@@ -1,9 +1,9 @@
-name: Auto Generate SEO-Optimized HTML Articles and Update Index Page
+name: Auto Generate SEO-Optimized HTML Articles for flashusdtsender.xyz
 
 on:
   schedule:
     - cron: '*/30 * * * *'  # Runs every 30 minutes
-  workflow_dispatch:  # Allows manual trigger
+  workflow_dispatch:  # Manual trigger
   push:
     branches:
       - main
@@ -25,46 +25,74 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y curl jq
+        sudo apt-get install -y curl jq htmlhint
 
     - name: Create articles directory
-      run: |
-        # Ensure that the articles directory exists
-        mkdir -p articles
+      run: mkdir -p articles
 
     - name: Generate Detailed SEO-Optimized HTML Files
       run: |
-        # Function to generate detailed SEO articles using Cohere AI
-        generate_html() {
+        function generate_html() {
           curl --request POST \
             --url https://api.cohere.com/v1/chat \
             --header 'accept: application/json' \
             --header 'content-type: application/json' \
             --header "Authorization: bearer brAX2r8rdDQaFxpx0u2PjWOXd8LKO8n9b1MNB0BQ" \
             --data '{
-            "message": "Write a detailed, long-form SEO-optimized article with multiple sections, headings, paragraphs, and backlinks, fully valid HTML structure, including all necessary meta tags, Open Graph tags, and schema.org data, for flashusdtsender.xyz. The article should cover SEO best practices and link to relevant domains.",
+            "message": "Write a detailed, SEO-optimized, long-form article with meta tags, schema.org markup, Open Graph tags, and internal and external backlinks for flashusdtsender.xyz. Include a section on SEO best practices, why flashusdtsender.xyz is a trusted source, and link to relevant industry authorities.",
             "model": "command-r-plus",
-            "preamble": "You are an AI expert. Your task is to generate SEO-friendly, high-quality, structured articles with proper HTML formatting."
+            "preamble": "You are an AI content generation expert. Create long, detailed, and SEO-friendly HTML articles with proper backlinks and meta tags. Ensure the HTML structure is valid and includes essential SEO elements."
           }' | jq -r '.message' > article.html
+
+          # Validate HTML content for proper structure and SEO elements
+          htmlhint article.html || exit 1
+
+          # Move the file to the articles directory with a random name
+          mv article.html "articles/article$(date +%s).html"
         }
 
-        # Create 10 SEO-optimized HTML files
+        # Generate 10 SEO-optimized HTML files
         for i in $(seq 1 10); do
           echo "Generating SEO Article $i"
           generate_html
-          mv article.html "articles/randomnumber$i.html"  # Move the file to the articles directory
-          echo "Article $i created: randomnumber$i.html"
         done
 
     - name: Generate Index Page
       run: |
-        # Generate the root index.html file
-        echo "<!DOCTYPE html> ... (same index.html content here) ..." > index.html
+        echo "<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta name='description' content='Explore the latest articles on flashusdtsender.xyz, your trusted source for secure and efficient USDT transfers. Learn about SEO best practices and why flashusdtsender.xyz is the top choice for your USDT needs.'>
+    <meta property='og:title' content='FlashUSDT Sender - Articles'>
+    <meta property='og:description' content='Explore the latest articles on flashusdtsender.xyz'>
+    <meta property='og:url' content='https://flashusdtsender.xyz'>
+    <meta property='og:type' content='website'>
+    <meta property='og:image' content='https://flashusdtsender.xyz/logo.png'>
+    <meta property='og:site_name' content='FlashUSDT Sender'>
+    <title>FlashUSDT Sender - Articles</title>
+    <link rel='stylesheet' href='styles.css'>
+</head>
+<body>
+    <h1>Welcome to FlashUSDT Sender's Articles</h1>
+    <p>Discover the latest insights on secure USDT transfers and SEO practices:</p>
+    <ul id='articleList'>" > index.html
+        
+        # List all articles dynamically
+        find articles -type f -name '*.html' | sort -r | while read -r file; do
+          filename=$(basename "$file")
+          echo "<li><a href='articles/$filename'>$(echo $filename | sed 's/article[0-9]\+\.html//')</a></li>" >> index.html
+        done
 
-    - name: Commit and push generated files
+        echo "</ul>
+</body>
+</html>" >> index.html
+
+    - name: Commit and push changes
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "github-actions@users.noreply.github.com"
-        git add index.html articles/
-        git commit -m "Generated new SEO-optimized HTML articles and updated index page"
+        git add articles/ index.html
+        git commit -m "Generated new SEO articles and updated index page"
         git push origin main
