@@ -1,126 +1,65 @@
-name: Backlink Checker
+name: Auto Generate SEO-Optimized HTML Articles and Update Index Page
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Runs daily at midnight UTC
-  workflow_dispatch: # Manually trigger the workflow
+    - cron: '*/30 * * * *'  # Runs every 30 minutes
+  workflow_dispatch:  # Allows manual trigger
   push:
     branches:
       - main
 
 jobs:
-  backlink_check:
+  generate_html_files:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3 # Using the latest version of checkout action
+      uses: actions/checkout@v3
 
     - name: Set up PHP environment
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.1' # PHP 8.1 is the latest stable version at the time
-        extensions: curl # Installing curl extension needed for requests
+        php-version: '8.1'
+        extensions: curl
 
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y curl
+        sudo apt-get install -y curl jq
 
-    - name: Run Backlink Check
+    - name: Generate Detailed SEO-Optimized HTML Files
       run: |
-        php <<'EOF'
-        <?php
-        function make($url) {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_USERAGENT, "Googlebot/2.1 (http://www.googlebot.com/bot.html)");
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 60); // Set a timeout
-            curl_setopt($ch, CURLOPT_REFERER, $url);
-            curl_setopt($ch, CURLOPT_URL, $url);
-
-            // Gagal ngecURL
-            if (!$site = curl_exec($ch)) {
-                echo "Error fetching URL: $url\n";
-                curl_close($ch);
-                return 'error';
-            } else {
-                curl_close($ch);
-                return 'success';
-            }
+        # Function to generate detailed SEO articles using Cohere AI
+        generate_html() {
+          curl --request POST \
+            --url https://api.cohere.com/v1/chat \
+            --header 'accept: application/json' \
+            --header 'content-type: application/json' \
+            --header "Authorization: bearer brAX2r8rdDQaFxpx0u2PjWOXd8LKO8n9b1MNB0BQ" \
+            --data '{
+            "message": "Write a detailed, long-form SEO-optimized article with multiple sections, headings, paragraphs, and backlinks, fully valid HTML structure, including all necessary meta tags, Open Graph tags, and schema.org data, for flashusdtsender.xyz. The article should cover SEO best practices and link to relevant domains.",
+            "model": "command-r-plus",
+            "preamble": "You are an AI expert. Your task is to generate SEO-friendly, high-quality, structured articles with proper HTML formatting."
+          }' | jq -r '.message' > article.html
         }
 
-        function backlink($domain) {
-            $urls = [
-                'http://www.builtwith.com/'.$domain,
-                'http://validator.w3.org/check?uri='.$domain,
-                'http://whois.tools4noobs.com/info/'.$domain,
-                'http://www.alexa.com/siteinfo/'.$domain,
-                'http://www.alexa.com/data/details/?url='.$domain,
-                'http://www.aboutdomain.org/backlinks/'.$domain.'/',
-                'http://www.robtex.com/dns/'.$domain.'.html',
-                'http://www.quantcast.com/'.$domain,
-                'http://uptime.netcraft.com/up/graph?site='.$domain,
-                'http://www.pageheat.com/heat/'.$domain,
-                'http://www.aboutthedomain.com/'.$domain,
-                'http://websiteshadow.com/'.$domain,
-                'http://www.surcentro.com/en/info/'.$domain,
-                'http://www.onlinewebcheck.com/check.php?url='.$domain,
-                'http://websitevaluecalculator.org/'.$domain,
-                'http://statswebsites.com/'.$domain,
-                'http://whoisx.co.uk/'.$domain,
-                'http://www.websiteaccountant.nl/'.$domain,
-                'http://www.talkreviews.ro/'.$domain,
-                'http://www.listenarabic.com/search?q='.$domain.'&amp;sa=Search',
-                'http://www.keywordspy.com/research/search.aspx?q='.$domain.'&amp;tab=domain-overview',
-                'http://boardreader.com/linkinfo/'.$domain,
-                'http://builtwith.com/'.$domain,
-                'http://www.websiteaccountant.be/'.$domain,
-                'http://www.altavista.com/yhs/search?fr=altavista&amp;itag=ody&amp;kgs=0&amp;kls=0&amp;q=site:'.$domain,
-                'http://www.consultanta-seo.ro/results/'.$domain,
-                'http://siteanalytics.compete.com/'.$domain.'/',
-                'http://wholinkstome.com/url/'.$domain,
-                'http://www.serpanalytics.com/#competitor/'.$domain.'/summary//1',
-                'http://www.pagerankplace.com/website/'.$domain,
-                'http://hosts-file.net/default.asp?s='.$domain,
-                'http://www.protect-x.com/info/'.$domain,
-                'http://whoislookupdb.com/whois-'.$domain,
-                'http://directory.joomlartwork.com/'.$domain,
-                'http://openlinkprofiler.org/r/'.$domain,
-                'https://www.threatcrowd.org/domain.php?domain='.$domain,
-                'https://www.similarweb.com/website/'.$domain,
-                'http://www.checklinks.top/'.$domain.'/',
-                'http://downoruprightnow.com/status/'.$domain,
-                'http://website.informer.com/'.$domain,
-                'http://updates.easycounter.com/'.$domain,
-                'http://www.website-test.org/en/www/'.$domain,
-                'http://www.siteprice.org/website-worth/'.$domain,
-                'http://archive.is/'.$domain,
-                'http://seocompr.com/www/'.$domain.'.html',
-                'http://www.sitelinks.info/'.$domain.'/',
-                'http://sitesec.co/'.$domain,
-                'http://'.$domain.'.hotsited.com/',
-                'https://top1m.info/domains/'.$domain,
-                'http://minify.mobi/results/'.$domain,
-                'http://www.siteparallel.com/'.$domain
-            ];
+        # Create 10 SEO-optimized HTML files
+        for i in $(seq 1 10); do
+          echo "Generating SEO Article $i"
+          generate_html
+          mv article.html "articles/randomnumber$i.html"
+          echo "Article $i created: randomnumber$i.html"
+        done
 
-            foreach ($urls as $url) {
-                echo $url . ' - ' . make($url) . "\n";
-            }
-        }
+    - name: Generate Index Page
+      run: |
+        # Generate the root index.html file
+        echo "<!DOCTYPE html> ... (same index.html content here) ..." > index.html
 
-        $domain = 'flashusdtsender.xyz'; // Replace with your target domain
-        backlink($domain);
-        ?>
-        EOF
-
-    - name: Upload Results
-      if: failure()
-      uses: actions/upload-artifact@v3
-      with:
-        name: backlink-check-results
-        path: ./backlink-check-results.log
+    - name: Commit and push generated files
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "github-actions@users.noreply.github.com"
+        git add index.html articles/
+        git commit -m "Generated new SEO-optimized HTML articles and updated index page"
+        git push origin main
