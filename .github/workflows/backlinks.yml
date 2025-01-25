@@ -27,6 +27,11 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y curl jq
 
+    - name: Create articles directory
+      run: |
+        # Ensure that the articles directory exists
+        mkdir -p articles
+
     - name: Generate Detailed SEO-Optimized HTML Files
       run: |
         # Function to generate detailed SEO articles using Cohere AI
@@ -47,7 +52,7 @@ jobs:
         for i in $(seq 1 10); do
           echo "Generating SEO Article $i"
           generate_html
-          mv article.html "articles/randomnumber$i.html"
+          mv article.html "articles/randomnumber$i.html"  # Move the file to the articles directory
           echo "Article $i created: randomnumber$i.html"
         done
 
