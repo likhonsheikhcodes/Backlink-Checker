@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Browse a collection of SEO-optimized articles that will help improve backlinks, increase traffic, and enhance SEO ranking for flashusdtsender.xyz.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="SEO Articles for flashusdtsender.xyz">
+    <meta property="og:description" content="Explore a collection of SEO-optimized articles designed to increase backlinks and improve SEO ranking for flashusdtsender.xyz.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://flashusdtsender.xyz/images/og-image.jpg">
+    <meta property="og:url" content="https://flashusdtsender.xyz">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@flashusdtsender">
+    <meta name="twitter:title" content="SEO Articles for flashusdtsender.xyz">
+    <meta name="twitter:description" content="A collection of SEO-optimized articles to improve your SEO ranking and increase backlinks.">
+    <meta name="twitter:image" content="https://flashusdtsender.xyz/images/og-image.jpg">
+    <meta itemprop="name" content="SEO Articles for flashusdtsender.xyz">
+    <meta itemprop="description" content="A collection of SEO-optimized articles designed to increase backlinks and improve your SEO ranking for flashusdtsender.xyz.">
+    <meta itemprop="image" content="https://flashusdtsender.xyz/images/og-image.jpg">
+
+    <title>SEO Articles for flashusdtsender.xyz</title>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        header {
+            background: #333;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0;
+        }
+
+        p {
+            font-size: 1rem;
+            margin: 10px 0;
+        }
+
+        #articles-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        #articles-list a {
+            display: block;
+            background: #fff;
+            padding: 20px;
+            text-decoration: none;
+            color: #333;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        #articles-list a:hover {
+            background: #f0f0f0;
+            transform: translateY(-5px);
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px;
+            background: #333;
+            color: #fff;
+            position: absolute;
+            width: 100%;
+            bottom: 0;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            p {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>SEO Articles for flashusdtsender.xyz</h1>
+        <p>Explore a collection of SEO-optimized articles designed to increase backlinks and improve your site's SEO ranking.</p>
+    </header>
+
+    <section id="articles-list">
+        <!-- Articles will be dynamically loaded here -->
+    </section>
+
+    <footer>
+        <p>&copy; 2025 flashusdtsender.xyz. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Fetch and display the list of articles
+        async function loadArticles() {
+            const articlesList = document.getElementById("articles-list");
+            try {
+                // Fetching the list of articles (using GitHub API or local folder structure)
+                const response = await fetch("https://raw.githubusercontent.com/likhonsheikhcodes/Backlink-Checker/main/articles/");
+                const articles = await response.text();
+                const articleFiles = articles.split("\n").filter(file => file.endsWith(".html"));
+
+                // Dynamically create article links
+                articleFiles.forEach((file) => {
+                    const articleLink = document.createElement("a");
+                    articleLink.href = `articles/${file}`;
+                    articleLink.textContent = file.replace('.html', '').replace(/-/g, ' ').toUpperCase();
+                    articleLink.target = "_blank";
+                    const listItem = document.createElement("div");
+                    listItem.appendChild(articleLink);
+                    articlesList.appendChild(listItem);
+                });
+            } catch (error) {
+                console.error("Error loading articles:", error);
+            }
+        }
+
+        window.onload = loadArticles;
+    </script>
+</body>
+
+</html>
