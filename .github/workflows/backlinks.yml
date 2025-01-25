@@ -1,0 +1,126 @@
+name: Backlink Checker
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs daily at midnight UTC
+  workflow_dispatch: # Manually trigger the workflow
+  push:
+    branches:
+      - main
+
+jobs:
+  backlink_check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3 # Using the latest version of checkout action
+
+    - name: Set up PHP environment
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1' # PHP 8.1 is the latest stable version at the time
+        extensions: curl # Installing curl extension needed for requests
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y curl
+
+    - name: Run Backlink Check
+      run: |
+        php <<'EOF'
+        <?php
+        function make($url) {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_USERAGENT, "Googlebot/2.1 (http://www.googlebot.com/bot.html)");
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 60); // Set a timeout
+            curl_setopt($ch, CURLOPT_REFERER, $url);
+            curl_setopt($ch, CURLOPT_URL, $url);
+
+            // Gagal ngecURL
+            if (!$site = curl_exec($ch)) {
+                echo "Error fetching URL: $url\n";
+                curl_close($ch);
+                return 'error';
+            } else {
+                curl_close($ch);
+                return 'success';
+            }
+        }
+
+        function backlink($domain) {
+            $urls = [
+                'http://www.builtwith.com/'.$domain,
+                'http://validator.w3.org/check?uri='.$domain,
+                'http://whois.tools4noobs.com/info/'.$domain,
+                'http://www.alexa.com/siteinfo/'.$domain,
+                'http://www.alexa.com/data/details/?url='.$domain,
+                'http://www.aboutdomain.org/backlinks/'.$domain.'/',
+                'http://www.robtex.com/dns/'.$domain.'.html',
+                'http://www.quantcast.com/'.$domain,
+                'http://uptime.netcraft.com/up/graph?site='.$domain,
+                'http://www.pageheat.com/heat/'.$domain,
+                'http://www.aboutthedomain.com/'.$domain,
+                'http://websiteshadow.com/'.$domain,
+                'http://www.surcentro.com/en/info/'.$domain,
+                'http://www.onlinewebcheck.com/check.php?url='.$domain,
+                'http://websitevaluecalculator.org/'.$domain,
+                'http://statswebsites.com/'.$domain,
+                'http://whoisx.co.uk/'.$domain,
+                'http://www.websiteaccountant.nl/'.$domain,
+                'http://www.talkreviews.ro/'.$domain,
+                'http://www.listenarabic.com/search?q='.$domain.'&amp;sa=Search',
+                'http://www.keywordspy.com/research/search.aspx?q='.$domain.'&amp;tab=domain-overview',
+                'http://boardreader.com/linkinfo/'.$domain,
+                'http://builtwith.com/'.$domain,
+                'http://www.websiteaccountant.be/'.$domain,
+                'http://www.altavista.com/yhs/search?fr=altavista&amp;itag=ody&amp;kgs=0&amp;kls=0&amp;q=site:'.$domain,
+                'http://www.consultanta-seo.ro/results/'.$domain,
+                'http://siteanalytics.compete.com/'.$domain.'/',
+                'http://wholinkstome.com/url/'.$domain,
+                'http://www.serpanalytics.com/#competitor/'.$domain.'/summary//1',
+                'http://www.pagerankplace.com/website/'.$domain,
+                'http://hosts-file.net/default.asp?s='.$domain,
+                'http://www.protect-x.com/info/'.$domain,
+                'http://whoislookupdb.com/whois-'.$domain,
+                'http://directory.joomlartwork.com/'.$domain,
+                'http://openlinkprofiler.org/r/'.$domain,
+                'https://www.threatcrowd.org/domain.php?domain='.$domain,
+                'https://www.similarweb.com/website/'.$domain,
+                'http://www.checklinks.top/'.$domain.'/',
+                'http://downoruprightnow.com/status/'.$domain,
+                'http://website.informer.com/'.$domain,
+                'http://updates.easycounter.com/'.$domain,
+                'http://www.website-test.org/en/www/'.$domain,
+                'http://www.siteprice.org/website-worth/'.$domain,
+                'http://archive.is/'.$domain,
+                'http://seocompr.com/www/'.$domain.'.html',
+                'http://www.sitelinks.info/'.$domain.'/',
+                'http://sitesec.co/'.$domain,
+                'http://'.$domain.'.hotsited.com/',
+                'https://top1m.info/domains/'.$domain,
+                'http://minify.mobi/results/'.$domain,
+                'http://www.siteparallel.com/'.$domain
+            ];
+
+            foreach ($urls as $url) {
+                echo $url . ' - ' . make($url) . "\n";
+            }
+        }
+
+        $domain = 'flashusdtsender.xyz'; // Replace with your target domain
+        backlink($domain);
+        ?>
+        EOF
+
+    - name: Upload Results
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: backlink-check-results
+        path: ./backlink-check-results.log
